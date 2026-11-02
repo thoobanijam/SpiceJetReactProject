@@ -24,9 +24,22 @@ const pool = new Pool({
   },
 });
 
-app.use(cors({
-  origin: "http://localhost:5173",
-}));
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+  })
+);
 
 app.use(express.json());
 
@@ -324,9 +337,9 @@ const startServer = async () => {
 
     await createUsersTable();
 
-    app.listen(PORT, () => {
-      console.log(`Flight API running at http://localhost:${PORT}`);
-    });
+   app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Flight API running on port ${PORT}`);
+});
   } catch (error) {
     console.error("Server startup error:", error);
     process.exit(1);
